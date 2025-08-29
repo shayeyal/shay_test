@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""
-Main script for running the Upstream Vehicle Data Pipeline.
-
-This script provides a command-line interface for running the complete data pipeline
-or individual stages (Bronze, Silver, Gold).
-"""
-
 import logging
 import argparse
 import json
@@ -46,7 +39,6 @@ Examples:
   python main.py --stage bronze --batch-size 5000  # Run only bronze stage
   python main.py --stage silver                  # Run only silver stage  
   python main.py --stage gold                    # Run only gold stage
-  python main.py --stats                         # Show pipeline statistics
         """
     )
     
@@ -83,12 +75,6 @@ Examples:
     )
     
     parser.add_argument(
-        "--stats",
-        action="store_true",
-        help="Show pipeline statistics and exit"
-    )
-    
-    parser.add_argument(
         "--config",
         help="Path to JSON configuration file"
     )
@@ -117,13 +103,6 @@ Examples:
         # Initialize orchestrator
         orchestrator = PipelineOrchestrator(config)
         
-        # Show stats and exit if requested
-        if args.stats:
-            logger.info("Retrieving pipeline statistics...")
-            stats = orchestrator.get_pipeline_stats()
-            print(json.dumps(stats, indent=2, default=str))
-            return
-            
         # Run pipeline stage
         logger.info(f"Starting pipeline stage: {args.stage}")
         
