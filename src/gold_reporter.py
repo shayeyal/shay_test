@@ -122,7 +122,7 @@ class GoldReporter:
             self.logger.error(f"Failed to generate VIN last state report: {e}")
             raise
             
-    def generate_velocity_analysis_report(self, silver_file_path: str) -> str:
+    def fastest_vehicles_per_hour_report(self, silver_file_path: str) -> str:
         """
         Generate velocity analysis report.
         

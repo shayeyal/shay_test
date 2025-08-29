@@ -3,7 +3,7 @@ Pipeline Orchestrator for coordinating the entire data pipeline flow.
 """
 import logging
 import time
-from typing import Dict, Optional
+from typing import Dict
 from datetime import datetime
 
 from .api_client import APIClient
@@ -133,8 +133,7 @@ class PipelineOrchestrator:
             
             # Generate all reports
             vin_report = self.gold_reporter.generate_vin_last_state_report(silver_file)
-            manufacturer_report = self.gold_reporter.generate_manufacturer_summary_report(silver_file)
-            velocity_report = self.gold_reporter.generate_velocity_analysis_report(silver_file)
+            velocity_report = self.gold_reporter.fastest_vehicles_per_hour_report(silver_file)
             
             gold_stats = self.gold_reporter.get_gold_stats()
             
@@ -143,7 +142,6 @@ class PipelineOrchestrator:
                 "duration_seconds": round(time.time() - stage_start, 2),
                 "reports_generated": {
                     "vin_last_state": vin_report,
-                    "manufacturer_summary": manufacturer_report,
                     "velocity_analysis": velocity_report
                 },
                 "stats": gold_stats
@@ -247,14 +245,12 @@ class PipelineOrchestrator:
                     
             # Generate all reports
             vin_report = self.gold_reporter.generate_vin_last_state_report(silver_file_path)
-            manufacturer_report = self.gold_reporter.generate_manufacturer_summary_report(silver_file_path)
-            velocity_report = self.gold_reporter.generate_velocity_analysis_report(silver_file_path)
+            velocity_report = self.gold_reporter.fastest_vehicles_per_hour_report(silver_file_path)
             
             return {
                 "status": "success",
                 "reports_generated": {
                     "vin_last_state": vin_report,
-                    "manufacturer_summary": manufacturer_report,
                     "velocity_analysis": velocity_report
                 }
             }
