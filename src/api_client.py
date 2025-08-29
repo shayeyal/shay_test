@@ -3,7 +3,7 @@ API Client for fetching vehicle message data from the Upstream API.
 """
 import requests
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict
 from datetime import datetime
 
 
@@ -65,6 +65,66 @@ class APIClient:
         except ValueError as e:
             self.logger.error(f"Invalid response data: {e}")
             raise
+    
+    def fetch_vehicle_messages_paged(self, total_amount: int, batch_size: int = 1000) -> List[Dict]:
+        """
+        Fetch vehicle messages using simple client-side pagination.
+        
+        Args:
+            total_amount: Total number of messages to fetch (upper bound)
+            batch_size: Number of messages per API request
+        
+        Returns:
+            Aggregated list of vehicle message dictionaries
+        """
+        if total_amount <= 0:
+            return []
+        if batch_size <= 0:
+            batch_size = 1
+        
+        aggregated: List[Dict] = []
+        remaining = total_amount
+        
+        while remaining > 0:
+            current_batch = min(batch_size, remaining)
+            self.logger.info(f"Pagination fetch: requesting {current_batch} messages (remaining {remaining})")
+            batch = self.fetch_vehicle_messages(amount=current_batch)
+            aggregated.extend(batch)
+            # If API returns fewer than requested, assume no more data available
+            if len(batch) < current_batch:
+                self.logger.info("Received fewer records than requested; stopping pagination")
+                break
+            remaining -= len(batch)
+        
+        return aggregated
+
+    def iter_vehicle_messages(self, total_amount: int, batch_size: int = 1000):
+        """
+        Generator that yields records in batches using simple pagination.
+        
+        Args:
+            total_amount: Total number of messages to fetch
+            batch_size: Number of messages per API request
+        
+        Yields:
+            Lists of vehicle message dictionaries
+        """
+        if total_amount <= 0:
+            return
+        if batch_size <= 0:
+            batch_size = 1
+        
+        remaining = total_amount
+        while remaining > 0:
+            current_batch = min(batch_size, remaining)
+            self.logger.info(f"Pagination fetch (generator): requesting {current_batch} messages (remaining {remaining})")
+            batch = self.fetch_vehicle_messages(amount=current_batch)
+            if not batch:
+                break
+            yield batch
+            if len(batch) < current_batch:
+                break
+            remaining -= len(batch)
             
     def health_check(self) -> bool:
         """
