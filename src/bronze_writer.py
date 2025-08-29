@@ -1,12 +1,12 @@
 """
 Bronze Writer for saving raw API data to the Bronze layer of the data lake.
 """
-import os
 import pandas as pd
 import duckdb
 import logging
 from typing import List, Dict
 from datetime import datetime
+import shutil
 from pathlib import Path
 
 
@@ -33,7 +33,7 @@ class BronzeWriter:
             batch_id: Optional batch identifier for the data
             
         Returns:
-            Path to the written parquet file
+            Base directory path where partitioned parquet files were written
             
         Raises:
             Exception: If writing fails
@@ -63,14 +63,14 @@ class BronzeWriter:
             
             self.logger.info(f"Writing {len(df)} records to Bronze layer")
             
-            # Create output directory structure
+            # Create/clean output directory: if data exists under output folder, remove it before writing
             vehicle_messages_dir = self.bronze_path / "vehicle_messages"
+            if vehicle_messages_dir.exists():
+                self.logger.info(f"Cleaning output folder before write: {vehicle_messages_dir}")
+                shutil.rmtree(vehicle_messages_dir, ignore_errors=True)
             vehicle_messages_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Create a single parquet file (we can implement partitioning later if needed)
-            processing_timestamp = current_time.strftime('%Y%m%d_%H%M%S')
-            output_file = vehicle_messages_dir / f"data_{processing_timestamp}.parquet"
-            
+            output_dir = vehicle_messages_dir
+
             conn.execute(f"""
                 COPY (
                     SELECT 
@@ -93,13 +93,13 @@ class BronzeWriter:
                         partition_date,
                         partition_hour
                     FROM raw_data
-                ) TO '{output_file}' (FORMAT PARQUET)
+                ) TO '{output_dir}' (FORMAT PARQUET, PARTITION_BY (partition_date, partition_hour))
             """)
             
             conn.close()
             
-            self.logger.info(f"Successfully wrote data to {output_file}")
-            return str(output_file)
+            self.logger.info(f"Successfully wrote partitioned data under {output_dir}")
+            return str(output_dir)
             
         except Exception as e:
             self.logger.error(f"Failed to write bronze data: {e}")
