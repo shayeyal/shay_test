@@ -78,7 +78,6 @@ class SilverProcessor:
                                 WHEN gear_position = 'NEUTRAL' THEN 0
                                 WHEN gear_position = 'REVERSE' THEN -1
                                 WHEN gear_position IS NULL THEN NULL
-                                WHEN REGEXP_MATCHES(gear_position, '^[0-9]+$') THEN CAST(gear_position AS INTEGER)
                                 ELSE NULL
                             END as gear_position_numeric,
                             gear_position as gear_position_original,
@@ -88,11 +87,6 @@ class SilverProcessor:
                             batch_id,
                             partition_date,
                             partition_hour,
-                            -- Add data quality flags
-                            CASE 
-                                WHEN vin IS NULL OR TRIM(vin) = '' THEN false 
-                                ELSE true 
-                            END as has_valid_vin,
                             CASE 
                                 WHEN latitude IS NOT NULL AND longitude IS NOT NULL 
                                      AND latitude BETWEEN -90 AND 90 
@@ -106,10 +100,10 @@ class SilverProcessor:
                                 ELSE false 
                             END as has_valid_velocity,
                             '{processing_timestamp}' as silver_processing_timestamp
-                        FROM read_parquet('{bronze_pattern}', filename=true, hive_partitioning=false)
+                        FROM read_parquet('{bronze_pattern}', filename=true, hive_partitioning=true)
                     )
                     SELECT * FROM cleaned_data
-                    WHERE has_valid_vin = true  -- Drop rows with null/empty VIN
+                    WHERE vin IS NOT NULL AND TRIM(vin) <> ''  -- Drop rows with null/empty VIN
                     ORDER BY message_datetime DESC
                 ) TO '{output_path}' (FORMAT PARQUET)
             """)
