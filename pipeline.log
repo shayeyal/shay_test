@@ -1,0 +1,125 @@
+2025-08-29 09:19:38,659 - main - INFO - Starting pipeline stage: bronze
+2025-08-29 09:19:38,659 - PipelineOrchestrator - INFO - Running Bronze stage - Batch ID: bronze_20250829_061938
+2025-08-29 09:19:38,659 - APIClient - INFO - Fetching 1 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:19:38,662 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:9900
+2025-08-29 09:19:38,717 - urllib3.connectionpool - DEBUG - http://localhost:9900 "GET /upstream/vehicle_messages?amount=1 HTTP/1.1" 200 None
+2025-08-29 09:19:38,719 - APIClient - INFO - Successfully fetched 1 messages
+2025-08-29 09:19:38,719 - APIClient - INFO - Fetching 100 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:19:38,724 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:9900
+2025-08-29 09:19:38,736 - urllib3.connectionpool - DEBUG - http://localhost:9900 "GET /upstream/vehicle_messages?amount=100 HTTP/1.1" 200 None
+2025-08-29 09:19:38,737 - APIClient - INFO - Successfully fetched 100 messages
+2025-08-29 09:19:38,759 - BronzeWriter - INFO - Writing 100 records to Bronze layer
+2025-08-29 09:19:38,761 - BronzeWriter - ERROR - Failed to write bronze data: IO Error: Failed to create directory "data/bronze/vehicle_messages/date=${partition_date}/hour=${partition_hour}/data.parquet": No such file or directory
+2025-08-29 09:19:38,761 - PipelineOrchestrator - ERROR - Bronze stage failed: IO Error: Failed to create directory "data/bronze/vehicle_messages/date=${partition_date}/hour=${partition_hour}/data.parquet": No such file or directory
+2025-08-29 09:19:38,762 - main - ERROR - Pipeline failed!
+2025-08-29 09:20:11,259 - main - INFO - Starting pipeline stage: bronze
+2025-08-29 09:20:11,260 - PipelineOrchestrator - INFO - Running Bronze stage - Batch ID: bronze_20250829_062011
+2025-08-29 09:20:11,260 - APIClient - INFO - Fetching 1 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:20:11,299 - APIClient - INFO - Successfully fetched 1 messages
+2025-08-29 09:20:11,299 - APIClient - INFO - Fetching 100 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:20:11,312 - APIClient - INFO - Successfully fetched 100 messages
+2025-08-29 09:20:11,381 - BronzeWriter - INFO - Writing 100 records to Bronze layer
+2025-08-29 09:20:11,394 - BronzeWriter - INFO - Successfully wrote data to data/bronze/vehicle_messages/data_20250829_062011.parquet
+2025-08-29 09:20:11,394 - main - INFO - Pipeline completed successfully!
+2025-08-29 09:20:31,209 - main - INFO - Starting pipeline stage: full
+2025-08-29 09:20:31,209 - PipelineOrchestrator - INFO - Starting full pipeline execution - Batch ID: pipeline_20250829_062031
+2025-08-29 09:20:31,209 - PipelineOrchestrator - INFO - Stage 1: Starting API data ingestion
+2025-08-29 09:20:31,209 - APIClient - INFO - Fetching 1 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:20:31,229 - APIClient - INFO - Successfully fetched 1 messages
+2025-08-29 09:20:31,229 - APIClient - INFO - Fetching 1000 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:20:31,255 - APIClient - INFO - Successfully fetched 1000 messages
+2025-08-29 09:20:31,347 - BronzeWriter - INFO - Writing 1000 records to Bronze layer
+2025-08-29 09:20:31,363 - BronzeWriter - INFO - Successfully wrote data to data/bronze/vehicle_messages/data_20250829_062031.parquet
+2025-08-29 09:20:31,364 - BronzeWriter - INFO - Found 2 parquet files in Bronze layer
+2025-08-29 09:20:31,398 - BronzeWriter - INFO - Bronze layer stats: {'total_files': 2, 'total_records': 1100, 'unique_vehicles': 22, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 20, 31, 235000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>)}
+2025-08-29 09:20:31,398 - PipelineOrchestrator - INFO - Stage 1 completed in 0.19 seconds
+2025-08-29 09:20:31,398 - PipelineOrchestrator - INFO - Stage 2: Starting data cleaning and standardization
+2025-08-29 09:20:31,404 - SilverProcessor - INFO - Starting Silver layer processing
+2025-08-29 09:20:31,406 - SilverProcessor - INFO - Found 1100 records in Bronze layer
+2025-08-29 09:20:31,421 - SilverProcessor - INFO - Silver processing completed. Stats: {'total_records': 1048, 'unique_vehicles': 22, 'records_with_valid_coords': 1048, 'records_with_valid_velocity': 1048, 'unique_manufacturers': 17, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 20, 31, 235000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>)}
+2025-08-29 09:20:31,421 - SilverProcessor - INFO - Silver data written to: data/silver/vehicle_messages_cleaned_20250829_062031.parquet
+2025-08-29 09:20:31,431 - SilverProcessor - INFO - Silver layer stats: {'file_path': 'data/silver/vehicle_messages_cleaned_20250829_062031.parquet', 'total_records': 1048, 'unique_vehicles': 22, 'unique_manufacturers': 17, 'avg_velocity': 92.39, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 20, 31, 235000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'valid_coords_percentage': 100.0}
+2025-08-29 09:20:31,431 - PipelineOrchestrator - INFO - Stage 2 completed in 0.03 seconds
+2025-08-29 09:20:31,432 - PipelineOrchestrator - INFO - Stage 3: Starting report generation
+2025-08-29 09:20:31,437 - GoldReporter - INFO - Generating VIN last state report
+2025-08-29 09:20:31,451 - GoldReporter - INFO - VIN last state report generated. Stats: {'total_vehicles': 22, 'vehicles_with_door_state': 22, 'vehicles_with_wipers_state': 22, 'locked_doors': 8, 'active_wipers': 1, 'avg_last_velocity': 95.45}
+2025-08-29 09:20:31,451 - GoldReporter - INFO - Report saved to: data/gold/vin_last_state_20250829_062031.parquet
+2025-08-29 09:20:31,457 - GoldReporter - INFO - Generating manufacturer summary report
+2025-08-29 09:20:31,461 - GoldReporter - INFO - Manufacturer summary report saved to: data/gold/manufacturer_summary_20250829_062031.parquet
+2025-08-29 09:20:31,467 - GoldReporter - INFO - Generating velocity analysis report
+2025-08-29 09:20:31,474 - GoldReporter - INFO - Velocity analysis report saved to: data/gold/velocity_analysis_20250829_062031.parquet
+2025-08-29 09:20:31,474 - GoldReporter - INFO - Found 3 report files in Gold layer
+2025-08-29 09:20:31,474 - GoldReporter - INFO - Gold layer stats: {'total_reports': 3, 'report_types': {'manufacturer_summary': 1, 'velocity_analysis': 1, 'vin_last_state': 1}, 'latest_reports': {'manufacturer_summary': 'data/gold/manufacturer_summary_20250829_062031.parquet', 'velocity_analysis': 'data/gold/velocity_analysis_20250829_062031.parquet', 'vin_last_state': 'data/gold/vin_last_state_20250829_062031.parquet'}}
+2025-08-29 09:20:31,474 - PipelineOrchestrator - INFO - Stage 3 completed in 0.04 seconds
+2025-08-29 09:20:31,474 - PipelineOrchestrator - INFO - Full pipeline completed successfully in 0.27 seconds
+2025-08-29 09:20:31,474 - main - INFO - Pipeline completed successfully!
+2025-08-29 09:20:57,749 - main - INFO - Retrieving pipeline statistics...
+2025-08-29 09:20:57,749 - BronzeWriter - INFO - Found 2 parquet files in Bronze layer
+2025-08-29 09:20:57,849 - BronzeWriter - INFO - Bronze layer stats: {'total_files': 2, 'total_records': 1100, 'unique_vehicles': 22, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 20, 31, 235000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>)}
+2025-08-29 09:20:57,860 - SilverProcessor - INFO - Silver layer stats: {'file_path': 'data/silver/vehicle_messages_cleaned_20250829_062031.parquet', 'total_records': 1048, 'unique_vehicles': 22, 'unique_manufacturers': 17, 'avg_velocity': 92.39, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 20, 31, 235000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'valid_coords_percentage': 100.0}
+2025-08-29 09:20:57,860 - GoldReporter - INFO - Found 3 report files in Gold layer
+2025-08-29 09:20:57,860 - GoldReporter - INFO - Gold layer stats: {'total_reports': 3, 'report_types': {'manufacturer_summary': 1, 'velocity_analysis': 1, 'vin_last_state': 1}, 'latest_reports': {'manufacturer_summary': 'data/gold/manufacturer_summary_20250829_062031.parquet', 'velocity_analysis': 'data/gold/velocity_analysis_20250829_062031.parquet', 'vin_last_state': 'data/gold/vin_last_state_20250829_062031.parquet'}}
+2025-08-29 09:30:53,021 - main - INFO - Starting pipeline stage: full
+2025-08-29 09:30:53,021 - PipelineOrchestrator - INFO - Starting full pipeline execution - Batch ID: pipeline_20250829_063053
+2025-08-29 09:30:53,021 - PipelineOrchestrator - INFO - Stage 1: Starting API data ingestion
+2025-08-29 09:30:53,021 - APIClient - INFO - Fetching 1 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:30:53,069 - APIClient - INFO - Successfully fetched 1 messages
+2025-08-29 09:30:53,069 - APIClient - INFO - Fetching 10000 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:30:53,193 - APIClient - INFO - Successfully fetched 10000 messages
+2025-08-29 09:30:53,321 - BronzeWriter - INFO - Writing 10000 records to Bronze layer
+2025-08-29 09:30:53,339 - BronzeWriter - INFO - Successfully wrote data to data/bronze/vehicle_messages/data_20250829_063053.parquet
+2025-08-29 09:30:53,340 - BronzeWriter - INFO - Found 3 parquet files in Bronze layer
+2025-08-29 09:30:53,375 - BronzeWriter - INFO - Bronze layer stats: {'total_files': 3, 'total_records': 11100, 'unique_vehicles': 22, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 30, 53, 88000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>)}
+2025-08-29 09:30:53,375 - PipelineOrchestrator - INFO - Stage 1 completed in 0.35 seconds
+2025-08-29 09:30:53,375 - PipelineOrchestrator - INFO - Stage 2: Starting data cleaning and standardization
+2025-08-29 09:30:53,381 - SilverProcessor - INFO - Starting Silver layer processing
+2025-08-29 09:30:53,382 - SilverProcessor - INFO - Found 11100 records in Bronze layer
+2025-08-29 09:30:53,413 - SilverProcessor - INFO - Silver processing completed. Stats: {'total_records': 10598, 'unique_vehicles': 22, 'records_with_valid_coords': 10598, 'records_with_valid_velocity': 10598, 'unique_manufacturers': 17, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 30, 53, 88000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>)}
+2025-08-29 09:30:53,413 - SilverProcessor - INFO - Silver data written to: data/silver/vehicle_messages_cleaned_20250829_063053.parquet
+2025-08-29 09:30:53,423 - SilverProcessor - INFO - Silver layer stats: {'file_path': 'data/silver/vehicle_messages_cleaned_20250829_063053.parquet', 'total_records': 10598, 'unique_vehicles': 22, 'unique_manufacturers': 17, 'avg_velocity': 86.01, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 30, 53, 88000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'valid_coords_percentage': 100.0}
+2025-08-29 09:30:53,423 - PipelineOrchestrator - INFO - Stage 2 completed in 0.05 seconds
+2025-08-29 09:30:53,423 - PipelineOrchestrator - INFO - Stage 3: Starting report generation
+2025-08-29 09:30:53,429 - GoldReporter - INFO - Generating VIN last state report
+2025-08-29 09:30:53,445 - GoldReporter - INFO - VIN last state report generated. Stats: {'total_vehicles': 22, 'vehicles_with_door_state': 22, 'vehicles_with_wipers_state': 22, 'locked_doors': 13, 'active_wipers': 3, 'avg_last_velocity': 80.0}
+2025-08-29 09:30:53,445 - GoldReporter - INFO - Report saved to: data/gold/vin_last_state_20250829_063053.parquet
+2025-08-29 09:30:53,451 - GoldReporter - INFO - Generating manufacturer summary report
+2025-08-29 09:30:53,456 - GoldReporter - INFO - Manufacturer summary report saved to: data/gold/manufacturer_summary_20250829_063053.parquet
+2025-08-29 09:30:53,462 - GoldReporter - INFO - Generating velocity analysis report
+2025-08-29 09:30:53,469 - GoldReporter - INFO - Velocity analysis report saved to: data/gold/velocity_analysis_20250829_063053.parquet
+2025-08-29 09:30:53,469 - GoldReporter - INFO - Found 6 report files in Gold layer
+2025-08-29 09:30:53,470 - GoldReporter - INFO - Gold layer stats: {'total_reports': 6, 'report_types': {'manufacturer_summary': 2, 'velocity_analysis': 2, 'vin_last_state': 2}, 'latest_reports': {'manufacturer_summary': 'data/gold/manufacturer_summary_20250829_063053.parquet', 'velocity_analysis': 'data/gold/velocity_analysis_20250829_063053.parquet', 'vin_last_state': 'data/gold/vin_last_state_20250829_063053.parquet'}}
+2025-08-29 09:30:53,470 - PipelineOrchestrator - INFO - Stage 3 completed in 0.05 seconds
+2025-08-29 09:30:53,470 - PipelineOrchestrator - INFO - Full pipeline completed successfully in 0.45 seconds
+2025-08-29 09:30:53,471 - main - INFO - Pipeline completed successfully!
+2025-08-29 09:31:19,121 - main - INFO - Starting pipeline stage: full
+2025-08-29 09:31:19,122 - PipelineOrchestrator - INFO - Starting full pipeline execution - Batch ID: pipeline_20250829_063119
+2025-08-29 09:31:19,122 - PipelineOrchestrator - INFO - Stage 1: Starting API data ingestion
+2025-08-29 09:31:19,122 - APIClient - INFO - Fetching 1 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:31:19,137 - APIClient - INFO - Successfully fetched 1 messages
+2025-08-29 09:31:19,137 - APIClient - INFO - Fetching 10000 vehicle messages from http://localhost:9900/upstream/vehicle_messages
+2025-08-29 09:31:19,237 - APIClient - INFO - Successfully fetched 10000 messages
+2025-08-29 09:31:19,368 - BronzeWriter - INFO - Writing 10000 records to Bronze layer
+2025-08-29 09:31:19,386 - BronzeWriter - INFO - Successfully wrote data to data/bronze/vehicle_messages/data_20250829_063119.parquet
+2025-08-29 09:31:19,387 - BronzeWriter - INFO - Found 4 parquet files in Bronze layer
+2025-08-29 09:31:19,423 - BronzeWriter - INFO - Bronze layer stats: {'total_files': 4, 'total_records': 21100, 'unique_vehicles': 22, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 31, 19, 158000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>)}
+2025-08-29 09:31:19,423 - PipelineOrchestrator - INFO - Stage 1 completed in 0.3 seconds
+2025-08-29 09:31:19,423 - PipelineOrchestrator - INFO - Stage 2: Starting data cleaning and standardization
+2025-08-29 09:31:19,428 - SilverProcessor - INFO - Starting Silver layer processing
+2025-08-29 09:31:19,430 - SilverProcessor - INFO - Found 21100 records in Bronze layer
+2025-08-29 09:31:19,458 - SilverProcessor - INFO - Silver processing completed. Stats: {'total_records': 20141, 'unique_vehicles': 22, 'records_with_valid_coords': 20141, 'records_with_valid_velocity': 20141, 'unique_manufacturers': 17, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 31, 19, 158000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>)}
+2025-08-29 09:31:19,458 - SilverProcessor - INFO - Silver data written to: data/silver/vehicle_messages_cleaned_20250829_063119.parquet
+2025-08-29 09:31:19,468 - SilverProcessor - INFO - Silver layer stats: {'file_path': 'data/silver/vehicle_messages_cleaned_20250829_063119.parquet', 'total_records': 20141, 'unique_vehicles': 22, 'unique_manufacturers': 17, 'avg_velocity': 86.71, 'earliest_message': datetime.datetime(2025, 8, 29, 8, 20, 38, 308000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'latest_message': datetime.datetime(2025, 8, 29, 9, 31, 19, 158000, tzinfo=<DstTzInfo 'Asia/Jerusalem' IDT+3:00:00 DST>), 'valid_coords_percentage': 100.0}
+2025-08-29 09:31:19,468 - PipelineOrchestrator - INFO - Stage 2 completed in 0.05 seconds
+2025-08-29 09:31:19,468 - PipelineOrchestrator - INFO - Stage 3: Starting report generation
+2025-08-29 09:31:19,474 - GoldReporter - INFO - Generating VIN last state report
+2025-08-29 09:31:19,500 - GoldReporter - INFO - VIN last state report generated. Stats: {'total_vehicles': 22, 'vehicles_with_door_state': 22, 'vehicles_with_wipers_state': 22, 'locked_doors': 13, 'active_wipers': 2, 'avg_last_velocity': 89.09}
+2025-08-29 09:31:19,500 - GoldReporter - INFO - Report saved to: data/gold/vin_last_state_20250829_063119.parquet
+2025-08-29 09:31:19,506 - GoldReporter - INFO - Generating manufacturer summary report
+2025-08-29 09:31:19,512 - GoldReporter - INFO - Manufacturer summary report saved to: data/gold/manufacturer_summary_20250829_063119.parquet
+2025-08-29 09:31:19,518 - GoldReporter - INFO - Generating velocity analysis report
+2025-08-29 09:31:19,526 - GoldReporter - INFO - Velocity analysis report saved to: data/gold/velocity_analysis_20250829_063119.parquet
+2025-08-29 09:31:19,526 - GoldReporter - INFO - Found 9 report files in Gold layer
+2025-08-29 09:31:19,526 - GoldReporter - INFO - Gold layer stats: {'total_reports': 9, 'report_types': {'manufacturer_summary': 3, 'velocity_analysis': 3, 'vin_last_state': 3}, 'latest_reports': {'manufacturer_summary': 'data/gold/manufacturer_summary_20250829_063119.parquet', 'velocity_analysis': 'data/gold/velocity_analysis_20250829_063119.parquet', 'vin_last_state': 'data/gold/vin_last_state_20250829_063119.parquet'}}
+2025-08-29 09:31:19,527 - PipelineOrchestrator - INFO - Stage 3 completed in 0.06 seconds
+2025-08-29 09:31:19,527 - PipelineOrchestrator - INFO - Full pipeline completed successfully in 0.40 seconds
+2025-08-29 09:31:19,528 - main - INFO - Pipeline completed successfully!
