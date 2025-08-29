@@ -3,7 +3,7 @@ Silver Processor for cleaning and standardizing data from Bronze to Silver layer
 """
 import duckdb
 import logging
-from typing import Dict, Optional
+from typing import Optional
 from pathlib import Path
 from datetime import datetime
 
@@ -96,24 +96,9 @@ class SilverProcessor:
                 ) TO '{output_path}' (FORMAT PARQUET)
             """)
             
-            # Get processing stats
-            stats = conn.execute(f"""
-                SELECT 
-                    COUNT(*) as total_records,
-                    COUNT(DISTINCT vin) as unique_vehicles,
-                    COUNT(DISTINCT manufacturer) as unique_manufacturers,
-                FROM read_parquet('{output_path}')
-            """).fetchone()
-            
             conn.close()
             
-            processing_stats = {
-                "total_records": stats[0],
-                "unique_vehicles": stats[1], 
-                "unique_manufacturers": stats[2],
-            }
-            
-            self.logger.info(f"Silver processing completed. Stats: {processing_stats}")
+            self.logger.info("Silver processing completed.")
             self.logger.info(f"Silver data written to: {output_path}")
             
             return output_path
@@ -138,40 +123,4 @@ class SilverProcessor:
         latest_file = max(silver_files, key=lambda f: f.stat().st_mtime)
         return str(latest_file)
         
-    def get_silver_stats(self) -> Dict:
-        """
-        Get statistics about the latest Silver layer data.
-        
-        Returns:
-            Dictionary with statistics
-        """
-        try:
-            latest_file = self.get_latest_silver_file()
-            if not latest_file:
-                return {"error": "No silver files found"}
-                
-            conn = duckdb.connect()
-            
-            result = conn.execute(f"""
-                SELECT 
-                    COUNT(*) as total_records,
-                    COUNT(DISTINCT vin) as unique_vehicles,
-                    COUNT(DISTINCT manufacturer) as unique_manufacturers,
-                FROM read_parquet('{latest_file}')
-            """).fetchone()
-            
-            conn.close()
-            
-            stats = {
-                "file_path": latest_file,
-                "total_records": result[0],
-                "unique_vehicles": result[1],
-                "unique_manufacturers": result[2]
-            }
-            
-            self.logger.info(f"Silver layer stats: {stats}")
-            return stats
-            
-        except Exception as e:
-            self.logger.error(f"Failed to get silver stats: {e}")
-            return {"error": str(e)}
+    

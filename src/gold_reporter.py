@@ -3,7 +3,7 @@ Gold Reporter for generating business reports from Silver layer data.
 """
 import duckdb
 import logging
-from typing import Dict, List
+from typing import List
 from pathlib import Path
 from datetime import datetime
 
@@ -96,24 +96,9 @@ class GoldReporter:
                 ) TO '{output_path}' (FORMAT PARQUET)
             """)
             
-            # Get report stats
-            stats = conn.execute(f"""
-                SELECT 
-                    COUNT(*) as total_vehicles,
-                    COUNT(last_front_left_door_state) as vehicles_with_door_state,
-                    COUNT(last_wipers_state) as vehicles_with_wipers_state,
-                FROM read_parquet('{output_path}')
-            """).fetchone()
-            
             conn.close()
             
-            report_stats = {
-                "total_vehicles": stats[0],
-                "vehicles_with_door_state": stats[1],
-                "vehicles_with_wipers_state": stats[2],
-            }
-            
-            self.logger.info(f"VIN last state report generated. Stats: {report_stats}")
+            self.logger.info("VIN last state report generated.")
             self.logger.info(f"Report saved to: {output_path}")
             
             return output_path
@@ -188,46 +173,4 @@ class GoldReporter:
         self.logger.info(f"Found {len(report_files)} report files in Gold layer")
         return sorted(report_files)
         
-    def get_gold_stats(self) -> Dict:
-        """
-        Get statistics about all Gold layer reports.
-        
-        Returns:
-            Dictionary with statistics for each report type
-        """
-        try:
-            reports = self.list_gold_reports()
-            stats = {
-                "total_reports": len(reports),
-                "report_types": {},
-                "latest_reports": {}
-            }
-            
-            # Categorize reports by type
-            for report in reports:
-                filename = Path(report).stem
-                if filename.startswith("vin_last_state"):
-                    report_type = "vin_last_state"
-                elif filename.startswith("manufacturer_summary"):
-                    report_type = "manufacturer_summary"
-                elif filename.startswith("velocity_analysis"):
-                    report_type = "velocity_analysis"
-                else:
-                    report_type = "other"
-                    
-                if report_type not in stats["report_types"]:
-                    stats["report_types"][report_type] = 0
-                stats["report_types"][report_type] += 1
-                
-                # Track latest report of each type
-                if report_type not in stats["latest_reports"]:
-                    stats["latest_reports"][report_type] = report
-                elif report > stats["latest_reports"][report_type]:
-                    stats["latest_reports"][report_type] = report
-                    
-            self.logger.info(f"Gold layer stats: {stats}")
-            return stats
-            
-        except Exception as e:
-            self.logger.error(f"Failed to get gold stats: {e}")
-            return {"error": str(e)}
+    

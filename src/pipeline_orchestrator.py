@@ -99,14 +99,11 @@ class PipelineOrchestrator:
             # Write to Bronze layer
             bronze_file = self.bronze_writer.write_raw_data(raw_data, batch_id)
             
-            bronze_stats = self.bronze_writer.get_bronze_stats()
-            
             results["stages"]["bronze"] = {
                 "status": "success",
                 "duration_seconds": round(time.time() - stage_start, 2),
                 "records_fetched": len(raw_data),
-                "file_path": bronze_file,
-                "stats": bronze_stats
+                "file_path": bronze_file
             }
             
             self.logger.info(f"Stage 1 completed in {results['stages']['bronze']['duration_seconds']} seconds")
@@ -116,13 +113,10 @@ class PipelineOrchestrator:
             stage_start = time.time()
             
             silver_file = self.silver_processor.process_to_silver()
-            silver_stats = self.silver_processor.get_silver_stats()
-            
             results["stages"]["silver"] = {
                 "status": "success",
                 "duration_seconds": round(time.time() - stage_start, 2),
-                "file_path": silver_file,
-                "stats": silver_stats
+                "file_path": silver_file
             }
             
             self.logger.info(f"Stage 2 completed in {results['stages']['silver']['duration_seconds']} seconds")
@@ -135,16 +129,13 @@ class PipelineOrchestrator:
             vin_report = self.gold_reporter.generate_vin_last_state_report(silver_file)
             velocity_report = self.gold_reporter.fastest_vehicles_per_hour_report(silver_file)
             
-            gold_stats = self.gold_reporter.get_gold_stats()
-            
             results["stages"]["gold"] = {
                 "status": "success", 
                 "duration_seconds": round(time.time() - stage_start, 2),
                 "reports_generated": {
                     "vin_last_state": vin_report,
                     "velocity_analysis": velocity_report
-                },
-                "stats": gold_stats
+                }
             }
             
             self.logger.info(f"Stage 3 completed in {results['stages']['gold']['duration_seconds']} seconds")
@@ -259,15 +250,4 @@ class PipelineOrchestrator:
             self.logger.error(f"Gold stage failed: {e}")
             return {"status": "failed", "error": str(e)}
             
-    def get_pipeline_stats(self) -> Dict:
-        """
-        Get comprehensive statistics across all pipeline layers.
-        
-        Returns:
-            Dictionary with pipeline statistics
-        """
-        return {
-            "bronze_stats": self.bronze_writer.get_bronze_stats(),
-            "silver_stats": self.silver_processor.get_silver_stats(),
-            "gold_stats": self.gold_reporter.get_gold_stats()
-        }
+    
