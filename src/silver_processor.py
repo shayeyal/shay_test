@@ -87,23 +87,11 @@ class SilverProcessor:
                             batch_id,
                             partition_date,
                             partition_hour,
-                            CASE 
-                                WHEN latitude IS NOT NULL AND longitude IS NOT NULL 
-                                     AND latitude BETWEEN -90 AND 90 
-                                     AND longitude BETWEEN -180 AND 180 
-                                THEN true 
-                                ELSE false 
-                            END as has_valid_coordinates,
-                            CASE 
-                                WHEN velocity IS NOT NULL AND velocity >= 0 AND velocity <= 500 
-                                THEN true 
-                                ELSE false 
-                            END as has_valid_velocity,
                             '{processing_timestamp}' as silver_processing_timestamp
                         FROM read_parquet('{bronze_pattern}', filename=true, hive_partitioning=true)
                     )
                     SELECT * FROM cleaned_data
-                    WHERE vin IS NOT NULL AND TRIM(vin) <> ''  -- Drop rows with null/empty VIN
+                    WHERE vin IS NOT NULL AND TRIM(vin) <> ''
                     ORDER BY message_datetime DESC
                 ) TO '{output_path}' (FORMAT PARQUET)
             """)
@@ -113,11 +101,7 @@ class SilverProcessor:
                 SELECT 
                     COUNT(*) as total_records,
                     COUNT(DISTINCT vin) as unique_vehicles,
-                    SUM(CASE WHEN has_valid_coordinates THEN 1 ELSE 0 END) as records_with_valid_coords,
-                    SUM(CASE WHEN has_valid_velocity THEN 1 ELSE 0 END) as records_with_valid_velocity,
                     COUNT(DISTINCT manufacturer) as unique_manufacturers,
-                    MIN(message_datetime) as earliest_message,
-                    MAX(message_datetime) as latest_message
                 FROM read_parquet('{output_path}')
             """).fetchone()
             
@@ -126,11 +110,7 @@ class SilverProcessor:
             processing_stats = {
                 "total_records": stats[0],
                 "unique_vehicles": stats[1], 
-                "records_with_valid_coords": stats[2],
-                "records_with_valid_velocity": stats[3],
-                "unique_manufacturers": stats[4],
-                "earliest_message": stats[5],
-                "latest_message": stats[6]
+                "unique_manufacturers": stats[2],
             }
             
             self.logger.info(f"Silver processing completed. Stats: {processing_stats}")
@@ -177,10 +157,6 @@ class SilverProcessor:
                     COUNT(*) as total_records,
                     COUNT(DISTINCT vin) as unique_vehicles,
                     COUNT(DISTINCT manufacturer) as unique_manufacturers,
-                    AVG(CASE WHEN has_valid_velocity THEN velocity ELSE NULL END) as avg_velocity,
-                    MIN(message_datetime) as earliest_message,
-                    MAX(message_datetime) as latest_message,
-                    SUM(CASE WHEN has_valid_coordinates THEN 1 ELSE 0 END) / COUNT(*) * 100 as valid_coords_percentage
                 FROM read_parquet('{latest_file}')
             """).fetchone()
             
@@ -190,11 +166,7 @@ class SilverProcessor:
                 "file_path": latest_file,
                 "total_records": result[0],
                 "unique_vehicles": result[1],
-                "unique_manufacturers": result[2],
-                "avg_velocity": round(result[3], 2) if result[3] else None,
-                "earliest_message": result[4],
-                "latest_message": result[5],
-                "valid_coords_percentage": round(result[6], 2) if result[6] else None
+                "unique_manufacturers": result[2]
             }
             
             self.logger.info(f"Silver layer stats: {stats}")
