@@ -1,6 +1,3 @@
-"""
-Pipeline Orchestrator for coordinating the entire data pipeline flow.
-"""
 import logging
 import time
 from typing import Dict
@@ -10,10 +7,11 @@ from .api_client import APIClient
 from .bronze_writer import BronzeWriter
 from .silver_processor import SilverProcessor
 from .gold_reporter import GoldReporter
+import shutil
+from pathlib import Path
 
 
 class PipelineConfig:
-    """Configuration class for pipeline settings."""
     
     def __init__(
         self,
@@ -33,15 +31,8 @@ class PipelineConfig:
 
 
 class PipelineOrchestrator:
-    """Orchestrates the entire data pipeline from API ingestion to gold reports."""
     
     def __init__(self, config: PipelineConfig = None):
-        """
-        Initialize the Pipeline Orchestrator.
-        
-        Args:
-            config: Pipeline configuration object
-        """
         self.config = config or PipelineConfig()
         self.logger = logging.getLogger(self.__class__.__name__)
         
@@ -61,18 +52,6 @@ class PipelineOrchestrator:
         )
         
     def run_full_pipeline(self, batch_id: str = None) -> Dict:
-        """
-        Run the complete data pipeline from API ingestion to gold reports.
-        
-        Args:
-            batch_id: Optional batch identifier
-            
-        Returns:
-            Dictionary with pipeline execution results
-            
-        Raises:
-            Exception: If any stage of the pipeline fails
-        """
         pipeline_start_time = time.time()
         batch_id = batch_id or f"pipeline_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
         
@@ -125,16 +104,35 @@ class PipelineOrchestrator:
             self.logger.info("Stage 3: Starting report generation")
             stage_start = time.time()
             
+            # Clean gold output folder before generating reports
+            gold_dir = Path(self.config.gold_path)
+            if gold_dir.exists():
+                self.logger.info(f"Cleaning gold output folder before write: {gold_dir}")
+                shutil.rmtree(gold_dir, ignore_errors=True)
+            gold_dir.mkdir(parents=True, exist_ok=True)
+
             # Generate all reports
             vin_report = self.gold_reporter.generate_vin_last_state_report(silver_file)
             velocity_report = self.gold_reporter.fastest_vehicles_per_hour_report(silver_file)
+            # Optional DQ report: scan likely text columns for SQL-injection-like patterns (SQL-based)
+            try:
+                dq_report = self.gold_reporter.sql_violating_messages_report(
+                    bronze_file_path=str(Path(self.config.bronze_path) / "vehicle_messages" / "**" / "*.parquet"),
+                    gold_file_path=self.config.gold_path,
+                    columns=["vin", "manufacturer", "model"],
+                    regex_list=[r";", r"--", r"/\\*", r"\\*/", r"DROP", r"SELECT", r"INSERT", r"UPDATE", r"DELETE"]
+                )
+            except Exception as e:
+                self.logger.warning(f"SQL injection report generation failed: {e}")
+                dq_report = None
             
             results["stages"]["gold"] = {
                 "status": "success", 
                 "duration_seconds": round(time.time() - stage_start, 2),
                 "reports_generated": {
                     "vin_last_state": vin_report,
-                    "velocity_analysis": velocity_report
+                    "velocity_analysis": velocity_report,
+                    "sql_injection_report": dq_report
                 }
             }
             
@@ -162,15 +160,6 @@ class PipelineOrchestrator:
             raise Exception(error_msg)
             
     def run_bronze_stage(self, batch_id: str = None) -> Dict:
-        """
-        Run only the Bronze (ingestion) stage.
-        
-        Args:
-            batch_id: Optional batch identifier
-            
-        Returns:
-            Dictionary with bronze stage results
-        """
         batch_id = batch_id or f"bronze_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
         
         try:
@@ -194,22 +183,14 @@ class PipelineOrchestrator:
             return {"status": "failed", "error": str(e)}
             
     def run_silver_stage(self) -> Dict:
-        """
-        Run only the Silver (processing) stage.
-        
-        Returns:
-            Dictionary with silver stage results
-        """
         try:
             self.logger.info("Running Silver stage")
             
             silver_file = self.silver_processor.process_to_silver()
-            silver_stats = self.silver_processor.get_silver_stats()
-            
+
             return {
                 "status": "success",
-                "file_path": silver_file,
-                "stats": silver_stats
+                "file_path": silver_file
             }
             
         except Exception as e:
@@ -217,15 +198,6 @@ class PipelineOrchestrator:
             return {"status": "failed", "error": str(e)}
             
     def run_gold_stage(self, silver_file_path: str = None) -> Dict:
-        """
-        Run only the Gold (reporting) stage.
-        
-        Args:
-            silver_file_path: Optional path to silver file, if None uses latest
-            
-        Returns:
-            Dictionary with gold stage results
-        """
         try:
             self.logger.info("Running Gold stage")
             
@@ -234,15 +206,34 @@ class PipelineOrchestrator:
                 if not silver_file_path:
                     raise Exception("No silver file found")
                     
+            # Clean gold output folder before generating reports
+            gold_dir = Path(self.gold_reporter.gold_path)
+            if gold_dir.exists():
+                self.logger.info(f"Cleaning gold output folder before write: {gold_dir}")
+                shutil.rmtree(gold_dir, ignore_errors=True)
+            gold_dir.mkdir(parents=True, exist_ok=True)
+
             # Generate all reports
             vin_report = self.gold_reporter.generate_vin_last_state_report(silver_file_path)
             velocity_report = self.gold_reporter.fastest_vehicles_per_hour_report(silver_file_path)
+            # Optional DQ report (SQL-based)
+            try:
+                dq_report = self.gold_reporter.sql_violating_messages_report(
+                    bronze_file_path=str(Path(self.bronze_writer.bronze_path) / "vehicle_messages" / "**" / "*.parquet"),
+                    gold_file_path=self.gold_reporter.gold_path.as_posix(),
+                    columns=["vin", "manufacturer", "model"],
+                    regex_list=[r";", r"--", r"/\\*", r"\\*/", r"DROP", r"SELECT", r"INSERT", r"UPDATE", r"DELETE"]
+                )
+            except Exception as e:
+                self.logger.warning(f"SQL injection report generation failed: {e}")
+                dq_report = None
             
             return {
                 "status": "success",
                 "reports_generated": {
                     "vin_last_state": vin_report,
-                    "velocity_analysis": velocity_report
+                    "velocity_analysis": velocity_report,
+                    "sql_injection_report": dq_report
                 }
             }
             

@@ -1,6 +1,3 @@
-"""
-Gold Reporter for generating business reports from Silver layer data.
-"""
 import duckdb
 import logging
 from typing import List
@@ -9,34 +6,14 @@ from datetime import datetime
 
 
 class GoldReporter:
-    """Generates business reports from Silver layer data and stores them in Gold layer."""
     
     def __init__(self, silver_path: str = "data/silver", gold_path: str = "data/gold"):
-        """
-        Initialize the Gold Reporter.
-        
-        Args:
-            silver_path: Path to the silver data directory
-            gold_path: Path to the gold data directory
-        """
         self.silver_path = Path(silver_path)
         self.gold_path = Path(gold_path)
         self.gold_path.mkdir(parents=True, exist_ok=True)
         self.logger = logging.getLogger(self.__class__.__name__)
         
     def generate_vin_last_state_report(self, silver_file_path: str) -> str:
-        """
-        Generate VIN last state report with latest non-null values.
-        
-        Args:
-            silver_file_path: Path to the silver parquet file
-            
-        Returns:
-            Path to the generated gold report file
-            
-        Raises:
-            Exception: If report generation fails
-        """
         try:
             conn = duckdb.connect()
             
@@ -108,15 +85,6 @@ class GoldReporter:
             raise
             
     def fastest_vehicles_per_hour_report(self, silver_file_path: str) -> str:
-        """
-        Generate velocity analysis report.
-        
-        Args:
-            silver_file_path: Path to the silver parquet file
-            
-        Returns:
-            Path to the generated velocity analysis report file
-        """
         try:
             conn = duckdb.connect()
             
@@ -174,3 +142,31 @@ class GoldReporter:
         return sorted(report_files)
         
     
+    def sql_violating_messages_report(self, bronze_file_path: str, gold_file_path: str, columns: list[str], regex_list: list[str]):
+        con = duckdb.connect()
+
+        processing_timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        output_path = str(self.gold_path / f"sql_violating_messages_report{processing_timestamp}.parquet")
+        # Build WHERE conditions dynamically
+        conditions = []
+        for col in columns:
+            for regex in regex_list:
+                conditions.append(f"REGEXP_MATCHES(CAST({col} AS VARCHAR), '{regex}')")
+
+        where_clause = " OR ".join(conditions)
+
+        query = f"""
+            COPY (
+                SELECT *, 
+                    CASE
+                        {" ".join([f"WHEN REGEXP_MATCHES(CAST({col} AS VARCHAR), '{regex}') THEN '{col}'"
+                                    for col in columns for regex in regex_list])}
+                    END AS violating_column
+                FROM read_parquet('{bronze_file_path}')
+                WHERE {where_clause}
+            ) TO '{output_path}' (FORMAT 'parquet');
+        """
+
+        con.execute(query)
+        con.close()
+
